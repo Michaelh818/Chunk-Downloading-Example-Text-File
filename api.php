@@ -18,13 +18,14 @@ function dl_file_resumable($file, $is_resume=TRUE)
                   preg_replace('/\./', '%2e', $fileinfo['basename'], substr_count($fileinfo['basename'], '.') - 1) :
                   $fileinfo['basename'];
    
-    $file_extension = 'txt';//strtolower($path_info['extension']);
+    $file_extension = 'png';//strtolower($path_info['extension']); // i want to stream the data
 
     //This will set the Content-Type to the appropriate setting for the file
     switch($file_extension)
     {
         case 'exe': $ctype='application/octet-stream'; break;
         case 'txt': $ctype='application/txt'; break;
+        case 'png': $ctype='application/png'; break;
         case 'zip': $ctype='application/zip'; break;
         case 'mp3': $ctype='audio/mpeg'; break;
         case 'mpg': $ctype='video/mpeg'; break;
@@ -33,39 +34,30 @@ function dl_file_resumable($file, $is_resume=TRUE)
     }
 
     //check if http_range is sent by browser (or download manager)
-    if($is_resume && isset($_SERVER['HTTP_RANGE']))
-    {
+    if ($is_resume && isset($_SERVER['HTTP_RANGE'])) {
         list($size_unit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);
 
-        if ($size_unit == 'bytes')
-        {
+        if ($size_unit == 'bytes') {
             //figure out download piece from range (if set)
             list($seek_start, $seek_end) = explode('-', $range_orig, 2);
-            
-        }
-        else
-        {
+        } else {
             $range = '';
         }
-    }
-    else
-    {
+    } else {
         var_dump("HTTP_RANGE not set in server global");
         exit;
         $range = '';
-    }    
+    }
    
     //set start and end based on range (if set), else set defaults
     //also check for invalid ranges.
-    $seek_end = (empty($seek_end)) ? ($size - 1) : min(abs(intval($seek_end)),($size - 1));
-    $seek_start = (empty($seek_start) || $seek_end < abs(intval($seek_start))) ? 0 : max(abs(intval($seek_start)),0);
+    $seek_end = (empty($seek_end)) ? ($size - 1) : min(abs(intval($seek_end)), ($size - 1));
+    $seek_start = (empty($seek_start) || $seek_end < abs(intval($seek_start))) ? 0 : max(abs(intval($seek_start)), 0);
 
     //add headers if resumable
-    if ($is_resume)
-    {
+    if ($is_resume) {
         //Only send partial content header if downloading a piece of the file (IE workaround)
-        if ($seek_start > 0 || $seek_end < ($size - 1))
-        {
+        if ($seek_start > 0 || $seek_end < ($size - 1)) {
             header('HTTP/1.1 206 Partial Content');
         }
 
@@ -73,9 +65,9 @@ function dl_file_resumable($file, $is_resume=TRUE)
         header('Content-Range: bytes '.$seek_start.'-'.$seek_end.'/'.$size);
     }
 
-    //headers for IE Bugs (is this necessary?)
-    //header("Cache-Control: cache, must-revalidate");  
-    //header("Pragma: public");
+    // headers for IE Bugs (is this necessary?);
+    // header("Cache-Control: cache, must-revalidate");
+    // header("Pragma: public");
 
     header('Content-Type: ' . $ctype);
     header('Content-Disposition: attachment; filename="' . $filename . '"');
@@ -87,8 +79,7 @@ function dl_file_resumable($file, $is_resume=TRUE)
     fseek($fp, $seek_start);
 
     //start buffered download
-    while(!feof($fp))
-    {
+    while (!feof($fp)) {
         //reset time limit for big files
         set_time_limit(0);
         print(fread($fp, 1024*8));
@@ -99,18 +90,4 @@ function dl_file_resumable($file, $is_resume=TRUE)
     fclose($fp);
 }
 
-// fread($handle, filesize($file));
-//                ^^^^^^^^^^^^^^^
-// … you pass your chunk size as second argument:
-
-// $contents = fread($handle, 16000);
-// Prior to that, you move to the desired location:
-
-// // E.g. Read 4th chunk:
-// fseek($handle, 3 * 16000);
-// Full stuff:
-
-// $handle = fopen($file, "r");
-// fseek($handle, 3 * 16000);
-// $contents = fread($handle, 16000);
-dl_file_resumable('target.txt');
+dl_file_resumable('pic.png');
