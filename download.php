@@ -18,7 +18,7 @@ function dl_file_resumable($file, $is_resume=TRUE)
                   preg_replace('/\./', '%2e', $fileinfo['basename'], substr_count($fileinfo['basename'], '.') - 1) :
                   $fileinfo['basename'];
    
-    $file_extension = 'png';//strtolower($path_info['extension']); // i want to stream the data
+    $file_extension = 'mp4';//strtolower($path_info['extension']); // i want to stream the data
 
     //This will set the Content-Type to the appropriate setting for the file
     switch($file_extension)
@@ -28,7 +28,7 @@ function dl_file_resumable($file, $is_resume=TRUE)
         case 'png': $ctype='application/png'; break;
         case 'zip': $ctype='application/zip'; break;
         case 'mp3': $ctype='audio/mpeg'; break;
-        case 'mpg': $ctype='video/mpeg'; break;
+        case 'mp4': $ctype='video/mp4'; break;
         case 'avi': $ctype='video/x-msvideo'; break;
         default:    $ctype='application/force-download';
     }
@@ -72,6 +72,8 @@ function dl_file_resumable($file, $is_resume=TRUE)
     header('Content-Type: ' . $ctype);
     header('Content-Disposition: attachment; filename="' . $filename . '"');
     header('Content-Length: '.($seek_end - $seek_start + 1));
+    header('Total-Content-Length: '. filesize($file));
+
 
     //open the file
     $fp = fopen($file, 'rb');
@@ -90,4 +92,4 @@ function dl_file_resumable($file, $is_resume=TRUE)
     fclose($fp);
 }
 
-dl_file_resumable('pic.png');
+dl_file_resumable('test.mp4');
